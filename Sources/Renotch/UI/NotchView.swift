@@ -10,7 +10,7 @@ struct NotchView: View {
         switch model.mode {
         case .compact:
             return CGFloat(model.settings.resolvedCompactCornerRadius)
-        case .expanded, .fileDrop, .success:
+        case .expanded, .fileDrop, .success, .peek:
             return 18
         case .focusTakeover:
             return 0
@@ -21,7 +21,7 @@ struct NotchView: View {
         switch model.mode {
         case .compact: return CGFloat(model.settings.resolvedCompactCornerRadius)
         case .expanded: return 26
-        case .fileDrop, .success: return 30
+        case .fileDrop, .success, .peek: return 30
         case .focusTakeover: return 0
         }
     }
@@ -38,7 +38,7 @@ struct NotchView: View {
         case .compact: return isHovering ? 0.18 : 0
         case .expanded: return 0.38
         case .fileDrop: return 0.62
-        case .success: return 0.42
+        case .success, .peek: return 0.42
         case .focusTakeover: return 0.65
         }
     }
@@ -48,7 +48,7 @@ struct NotchView: View {
         case .compact: return isHovering ? 8 : 0
         case .expanded: return 14
         case .fileDrop: return 20
-        case .success: return 16
+        case .success, .peek: return 16
         case .focusTakeover: return 32
         }
     }
@@ -87,7 +87,7 @@ struct NotchView: View {
             return .spring(response: 0.5, dampingFraction: 0.62)
         case .fileDrop:
             return .spring(response: 0.28, dampingFraction: 0.78)
-        case .success:
+        case .success, .peek:
             return .spring(response: 0.28, dampingFraction: 0.82)
         case .focusTakeover:
             return .spring(response: 0.52, dampingFraction: 0.92)
@@ -140,6 +140,10 @@ struct NotchView: View {
                 FileDropView(isTargeted: model.isDraggingFileOver)
                     .transition(contentTransition)
             case .success:
+                FileDropSuccessView()
+                    .transition(contentTransition)
+            case .peek:
+                // Placeholder; Task 4 replaces this with the real peek content view.
                 FileDropSuccessView()
                     .transition(contentTransition)
             case .focusTakeover:

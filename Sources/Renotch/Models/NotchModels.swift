@@ -6,6 +6,7 @@ enum NotchMode: String, Codable {
     case fileDrop
     case success
     case focusTakeover
+    case peek
 }
 
 enum NotchAppearance: String, Codable, CaseIterable, Identifiable {
@@ -161,6 +162,12 @@ struct NotchSettings: Codable, Equatable {
     var expandedHeight = 209.0
     var collapseDelay = 0.45
     var verticalOffset = 0.0
+    /// Optional so settings written before peek notifications still decode.
+    var peekChargingEnabled: Bool? = true
+    var peekBluetoothEnabled: Bool? = true
+    var peekScreenshotEnabled: Bool? = true
+    var peekCapsLockEnabled: Bool? = false
+    var peekScreenshotAutoAddToShelf: Bool? = false
 
     static let `default` = NotchSettings()
 
@@ -249,6 +256,21 @@ struct NotchSettings: Codable, Equatable {
             "facebook.com",
             "netflix.com"
         ]
+    }
+
+    var resolvedPeekChargingEnabled: Bool { peekChargingEnabled ?? true }
+    var resolvedPeekBluetoothEnabled: Bool { peekBluetoothEnabled ?? true }
+    var resolvedPeekScreenshotEnabled: Bool { peekScreenshotEnabled ?? true }
+    var resolvedPeekCapsLockEnabled: Bool { peekCapsLockEnabled ?? false }
+    var resolvedPeekScreenshotAutoAddToShelf: Bool { peekScreenshotAutoAddToShelf ?? false }
+
+    func isPeekSourceEnabled(_ kind: PeekSourceKind) -> Bool {
+        switch kind {
+        case .charging: return resolvedPeekChargingEnabled
+        case .bluetooth: return resolvedPeekBluetoothEnabled
+        case .screenshot: return resolvedPeekScreenshotEnabled
+        case .capsLock: return resolvedPeekCapsLockEnabled
+        }
     }
 
     mutating func clampValues() {

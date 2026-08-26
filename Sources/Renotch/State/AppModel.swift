@@ -110,7 +110,7 @@ final class AppModel: ObservableObject {
 
     var isExpanded: Bool {
         switch mode {
-        case .expanded, .fileDrop, .success, .focusTakeover:
+        case .expanded, .fileDrop, .success, .focusTakeover, .peek:
             return true
         case .compact:
             return false
@@ -183,6 +183,9 @@ final class AppModel: ObservableObject {
         case .focusTakeover:
             let screen = NSScreen.main?.frame.size ?? NSSize(width: 1440, height: 900)
             return screen
+        case .peek:
+            // Placeholder; Task 4 replaces this with peek-specific sizing.
+            return NSSize(width: NotchSettings.dragWidth, height: NotchSettings.dragHeight)
         }
     }
 
@@ -217,7 +220,7 @@ final class AppModel: ObservableObject {
                 pin: true,
                 preferSelectedSection: true
             )
-        case .fileDrop, .success, .focusTakeover:
+        case .fileDrop, .success, .focusTakeover, .peek:
             break
         }
     }
