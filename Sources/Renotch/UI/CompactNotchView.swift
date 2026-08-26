@@ -187,6 +187,13 @@ struct CompactNotchView: View {
         case .music:
             return "music-\(musicWingTrackID)-\(timer.isActive ? "timer" : "media")"
         case .configured:
+            // The configured-music wing renders the same views as `.music`;
+            // sharing one identity keeps SwiftUI from replacing (and
+            // re-animating) the wings on every play/pause flip, which
+            // toggles the arbitrated presentation between the two cases.
+            if model.settings.resolvedCompactContent == .music {
+                return "music-\(musicWingTrackID)-\(timer.isActive ? "timer" : "media")"
+            }
             return "configured-\(model.settings.resolvedCompactContent.rawValue)-\(timer.isActive ? "active" : "idle")"
         }
     }

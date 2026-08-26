@@ -277,9 +277,16 @@ struct AlbumArtworkView: View {
     var body: some View {
         Group {
             if let artwork {
-                Image(nsImage: artwork)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
+                // Color.clear adopts exactly the proposed size, so the
+                // .fill image can overflow it and clipShape below cuts at
+                // the frame bounds — non-square art (YouTube thumbnails)
+                // no longer bleeds outside the tile.
+                Color.clear
+                    .overlay(
+                        Image(nsImage: artwork)
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                    )
             } else {
                 ZStack {
                     Color(red: 0.12, green: 0.12, blue: 0.14)
