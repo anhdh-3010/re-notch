@@ -615,6 +615,90 @@ struct SettingsView: View {
                 }
             }
 
+            // Peek Notifications Card
+            SettingCard(title: "Peek Notifications", icon: "eye.fill", iconColor: .teal) {
+                VStack(spacing: 0) {
+                    SettingRow(
+                        title: "Charger & battery",
+                        subtitle: "Peek when the charger connects, disconnects, or battery status changes"
+                    ) {
+                        Toggle("", isOn: peekChargingBinding)
+                            .toggleStyle(.switch)
+                            .labelsHidden()
+                    }
+
+                    Divider().opacity(0.12).padding(.vertical, 8)
+
+                    SettingRow(
+                        title: "Bluetooth audio devices",
+                        subtitle: "Peek when Bluetooth audio devices connect or disconnect"
+                    ) {
+                        Toggle("", isOn: peekBluetoothBinding)
+                            .toggleStyle(.switch)
+                            .labelsHidden()
+                    }
+
+                    Divider().opacity(0.12).padding(.vertical, 8)
+
+                    SettingRow(
+                        title: "Screenshots",
+                        subtitle: "Peek when a new screenshot is captured"
+                    ) {
+                        Toggle("", isOn: peekScreenshotBinding)
+                            .toggleStyle(.switch)
+                            .labelsHidden()
+                    }
+
+                    Divider().opacity(0.12).padding(.vertical, 8)
+
+                    SettingRow(
+                        title: "Add screenshots to File Shelf",
+                        subtitle: "Automatically add captured screenshots to the File Shelf"
+                    ) {
+                        Toggle("", isOn: peekScreenshotAutoAddToShelfBinding)
+                            .toggleStyle(.switch)
+                            .labelsHidden()
+                    }
+                    .disabled(!model.settings.resolvedPeekScreenshotEnabled)
+
+                    Divider().opacity(0.12).padding(.vertical, 8)
+
+                    SettingRow(
+                        title: "Caps Lock",
+                        subtitle: "Peek when Caps Lock is toggled on or off"
+                    ) {
+                        Toggle("", isOn: peekCapsLockBinding)
+                            .toggleStyle(.switch)
+                            .labelsHidden()
+                    }
+
+                    if model.settings.resolvedPeekCapsLockEnabled == false && !CapsLockEventSource.hasListenPermission {
+                        Divider().opacity(0.12).padding(.vertical, 8)
+
+                        HStack(spacing: 12) {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Input Monitoring Permission Needed")
+                                    .font(.system(size: 13, weight: .medium))
+                                    .foregroundStyle(.primary)
+
+                                Text("Enable Input Monitoring access in System Settings to receive Caps Lock peeks.")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+
+                            Spacer()
+
+                            Button("Open System Settings…") {
+                                openCapsLockPrivacySettings()
+                            }
+                            .buttonStyle(.borderedProminent)
+                            .controlSize(.small)
+                            .tint(.blue)
+                        }
+                    }
+                }
+            }
+
             // About Card
             SettingCard(title: "About & Privacy Guarantee", icon: "shield.checkerboard", iconColor: .blue) {
                 VStack(alignment: .leading, spacing: 12) {
@@ -653,6 +737,59 @@ struct SettingsView: View {
                 }
             }
         }
+    }
+
+    private var peekChargingBinding: Binding<Bool> {
+        Binding(
+            get: { model.settings.resolvedPeekChargingEnabled },
+            set: { model.settings.peekChargingEnabled = $0 }
+        )
+    }
+
+    private var peekBluetoothBinding: Binding<Bool> {
+        Binding(
+            get: { model.settings.resolvedPeekBluetoothEnabled },
+            set: { model.settings.peekBluetoothEnabled = $0 }
+        )
+    }
+
+    private var peekScreenshotBinding: Binding<Bool> {
+        Binding(
+            get: { model.settings.resolvedPeekScreenshotEnabled },
+            set: { model.settings.peekScreenshotEnabled = $0 }
+        )
+    }
+
+    private var peekScreenshotAutoAddToShelfBinding: Binding<Bool> {
+        Binding(
+            get: { model.settings.resolvedPeekScreenshotAutoAddToShelf },
+            set: { model.settings.peekScreenshotAutoAddToShelf = $0 }
+        )
+    }
+
+    private var peekCapsLockBinding: Binding<Bool> {
+        Binding(
+            get: { model.settings.resolvedPeekCapsLockEnabled },
+            set: { enabled in
+                if enabled && !CapsLockEventSource.hasListenPermission {
+                    CapsLockEventSource.requestListenPermission()
+                    // Permission not granted synchronously (or previously denied) —
+                    // leave the toggle off; the user re-enables after granting access.
+                    guard CapsLockEventSource.hasListenPermission else {
+                        model.settings.peekCapsLockEnabled = false
+                        return
+                    }
+                }
+                model.settings.peekCapsLockEnabled = enabled
+            }
+        )
+    }
+
+    private func openCapsLockPrivacySettings() {
+        guard let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ListenEvent") else {
+            return
+        }
+        NSWorkspace.shared.open(url)
     }
 
     // MARK: - Focus Blocker Tab Content
