@@ -56,6 +56,10 @@ final class BluetoothEventSource: NSObject, TransientEventSource {
         device: IOBluetoothDevice
     ) {
         guard Self.isAudioDevice(device) else { return }
+        let address = device.addressString ?? (device.name ?? "Bluetooth Device")
+        // Disconnect notifications are one-shot; drop the spent entry so a
+        // future reconnect re-registers a fresh one.
+        disconnectNotifications.removeValue(forKey: address)?.unregister()
         emit?(TransientEvent(kind: .bluetooth(
             name: device.name ?? "Bluetooth Device",
             connected: false,
