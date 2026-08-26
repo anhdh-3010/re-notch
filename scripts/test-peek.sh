@@ -24,6 +24,7 @@ swiftc \
     Sources/Renotch/Services/LaunchAtLoginService.swift \
     Sources/Renotch/Services/NotificationService.swift \
     Sources/Renotch/Services/FocusBlockerService.swift \
+    Sources/Renotch/Services/MediaRemoteCommandService.swift \
     Sources/Renotch/Window/FocusBlockerOverlayController.swift \
     Sources/Renotch/State/AppModel.swift \
     Tests/AppModelPeekTests.swift \

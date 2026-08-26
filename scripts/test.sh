@@ -30,3 +30,4 @@ swiftc \
 "$SCRIPT_DIR/test-appmodel.sh"
 "$SCRIPT_DIR/test-peek.sh"
 "$SCRIPT_DIR/test-transient-service.sh"
+"$SCRIPT_DIR/test-mediaremote.sh"

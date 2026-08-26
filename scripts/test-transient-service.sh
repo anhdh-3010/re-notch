@@ -24,6 +24,7 @@ swiftc \
     Sources/Renotch/Services/LaunchAtLoginService.swift \
     Sources/Renotch/Services/NotificationService.swift \
     Sources/Renotch/Services/FocusBlockerService.swift \
+    Sources/Renotch/Services/MediaRemoteCommandService.swift \
     Sources/Renotch/Services/TransientSources/TransientEventSource.swift \
     Sources/Renotch/Services/TransientEventService.swift \
     Sources/Renotch/Window/FocusBlockerOverlayController.swift \

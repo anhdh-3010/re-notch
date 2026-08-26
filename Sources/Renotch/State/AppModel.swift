@@ -42,6 +42,7 @@ final class AppModel: ObservableObject {
     let todos: TodoStore
     let activity: DeveloperActivityService
     let focusBlocker: FocusBlockerService
+    let mediaRemote: MediaRemoteCommandService
 
     var onPanelConfigurationChanged: (() -> Void)?
     var onVisibilityChanged: ((Bool) -> Void)?
@@ -76,6 +77,7 @@ final class AppModel: ObservableObject {
         todos = TodoStore(defaults: defaults)
         activity = DeveloperActivityService()
         focusBlocker = FocusBlockerService()
+        mediaRemote = MediaRemoteCommandService()
         FocusBlockerOverlayController.shared.blockerService = focusBlocker
 
         let didOnboard = defaults.bool(forKey: "virtualNotch.didCompleteOnboarding")
