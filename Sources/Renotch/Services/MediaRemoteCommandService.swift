@@ -7,6 +7,7 @@ final class MediaRemoteCommandService {
     enum Command: String {
         case togglePlayPause = "2"
         case nextTrack = "4"
+        case previousTrack = "5"
     }
 
     /// Test seam: (launchPath, arguments) -> Void. Default spawns the task.
@@ -63,5 +64,13 @@ final class MediaRemoteCommandService {
     func send(_ command: Command) {
         guard let scriptURL, let frameworkURL else { return }
         runner("/usr/bin/perl", [scriptURL.path, frameworkURL.path, "send", command.rawValue])
+    }
+
+    /// Seeks the now-playing app. The adapter's `seek` subcommand takes a
+    /// positive integer position in microseconds.
+    func seek(to seconds: TimeInterval) {
+        guard let scriptURL, let frameworkURL else { return }
+        let micros = max(0, Int((seconds * 1_000_000).rounded()))
+        runner("/usr/bin/perl", [scriptURL.path, frameworkURL.path, "seek", String(micros)])
     }
 }

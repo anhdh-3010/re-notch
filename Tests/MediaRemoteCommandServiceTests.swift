@@ -56,6 +56,33 @@ struct MediaRemoteCommandServiceTests {
             )
         }
 
+        available.send(.previousTrack)
+        expect(invocations.count == 3, "previousTrack invokes runner once")
+        if let call = invocations.last {
+            expect(
+                call.1 == [scriptURL.path, frameworkURL.path, "send", "5"],
+                "previousTrack passes script, framework, send, 5"
+            )
+        }
+
+        available.seek(to: 83.4)
+        expect(invocations.count == 4, "seek invokes runner once")
+        if let call = invocations.last {
+            expect(
+                call.1 == [scriptURL.path, frameworkURL.path, "seek", "83400000"],
+                "seek passes whole microseconds"
+            )
+        }
+
+        available.seek(to: -5)
+        expect(invocations.count == 5, "negative seek clamps instead of skipping")
+        if let call = invocations.last {
+            expect(
+                call.1 == [scriptURL.path, frameworkURL.path, "seek", "0"],
+                "negative seek clamps to zero (adapter requires positive integer)"
+            )
+        }
+
         // Missing framework URL (script present) must also short-circuit.
         var missingFrameworkCalls = 0
         let missingFramework = MediaRemoteCommandService(
@@ -66,6 +93,8 @@ struct MediaRemoteCommandServiceTests {
         expect(!missingFramework.isAvailable, "unavailable when framework URL is nil")
         missingFramework.send(.nextTrack)
         expect(missingFrameworkCalls == 0, "send does not invoke runner when framework URL is nil")
+        missingFramework.seek(to: 10)
+        expect(missingFrameworkCalls == 0, "seek does not invoke runner when unavailable")
 
         // bundle-based init: a bundle whose resourceURL resolves fine (it
         // always does) but whose MediaRemoteAdapter.framework was never
