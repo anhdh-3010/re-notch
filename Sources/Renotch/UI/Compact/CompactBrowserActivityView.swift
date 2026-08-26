@@ -11,30 +11,7 @@ struct ExpandedBrowserMediaView: View {
             HStack(alignment: .center, spacing: 14) {
                 thumbnail
 
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack(spacing: 5) {
-                        Image(systemName: "play.rectangle.fill")
-                        Text("YOUTUBE")
-                            .tracking(0.8)
-                        Circle()
-                            .fill(media.isPlaying ? Color.red : Color.white.opacity(0.35))
-                            .frame(width: 4, height: 4)
-                        Text(media.isPlaying ? "Playing" : "Paused")
-                    }
-                    .font(.system(size: 8, weight: .bold))
-                    .foregroundStyle(media.isPlaying ? Color.red : Color.notchMuted)
-
-                    Text(media.title)
-                        .font(.system(size: 12.5, weight: .semibold))
-                        .foregroundStyle(.white)
-                        .lineLimit(2)
-                        .truncationMode(.tail)
-                    Text(media.channel)
-                        .font(.system(size: 9, weight: .medium))
-                        .foregroundStyle(Color.notchMuted)
-                        .lineLimit(1)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
+                titleColumn
 
                 if model.mediaRemote.isAvailable {
                     controls
@@ -43,8 +20,7 @@ struct ExpandedBrowserMediaView: View {
             .frame(maxHeight: .infinity, alignment: .center)
 
             if let progress = media.progress {
-                HStack(spacing: 8) {
-                    Text(formatted(media.position))
+                HStack(spacing: 10) {
                     GeometryReader { proxy in
                         ZStack(alignment: .leading) {
                             Capsule().fill(Color.white.opacity(0.1))
@@ -52,7 +28,9 @@ struct ExpandedBrowserMediaView: View {
                         }
                     }
                     .frame(height: 3)
+
                     Text("−\(formatted(max(0, media.duration - media.position)))")
+                        .fixedSize()
                 }
                 .font(.system(size: 8, weight: .medium, design: .rounded))
                 .foregroundStyle(Color.notchMuted)
@@ -60,7 +38,35 @@ struct ExpandedBrowserMediaView: View {
             }
         }
         .padding(.top, 8)
+        .padding(.horizontal, 4)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+    }
+
+    private var titleColumn: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 5) {
+                Image(systemName: "play.rectangle.fill")
+                Text("YOUTUBE")
+                    .tracking(0.8)
+                Circle()
+                    .fill(media.isPlaying ? Color.red : Color.white.opacity(0.35))
+                    .frame(width: 4, height: 4)
+                Text(media.isPlaying ? "Playing" : "Paused")
+            }
+            .font(.system(size: 8, weight: .bold))
+            .foregroundStyle(media.isPlaying ? Color.red : Color.notchMuted)
+
+            Text(media.title)
+                .font(.system(size: 12.5, weight: .semibold))
+                .foregroundStyle(.white)
+                .lineLimit(2)
+                .truncationMode(.tail)
+            Text(media.channel)
+                .font(.system(size: 9, weight: .medium))
+                .foregroundStyle(Color.notchMuted)
+                .lineLimit(1)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private var thumbnail: some View {
