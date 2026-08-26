@@ -43,6 +43,7 @@ final class AppModel: ObservableObject {
     let activity: DeveloperActivityService
     let focusBlocker: FocusBlockerService
     let mediaRemote: MediaRemoteCommandService
+    let nowPlaying: MediaRemoteNowPlayingService
 
     var onPanelConfigurationChanged: (() -> Void)?
     var onVisibilityChanged: ((Bool) -> Void)?
@@ -55,6 +56,7 @@ final class AppModel: ObservableObject {
     private var messageWorkItem: DispatchWorkItem?
     private var browserActivityCancellable: AnyCancellable?
     private var musicActivityCancellable: AnyCancellable?
+    private var nowPlayingCancellable: AnyCancellable?
     private var timerActivityCancellable: AnyCancellable?
     private var activityGlanceCancellable: AnyCancellable?
     private var focusBlockerCancellable: AnyCancellable?
@@ -78,6 +80,7 @@ final class AppModel: ObservableObject {
         activity = DeveloperActivityService()
         focusBlocker = FocusBlockerService()
         mediaRemote = MediaRemoteCommandService()
+        nowPlaying = MediaRemoteNowPlayingService()
         FocusBlockerOverlayController.shared.blockerService = focusBlocker
 
         let didOnboard = defaults.bool(forKey: "virtualNotch.didCompleteOnboarding")
@@ -104,6 +107,9 @@ final class AppModel: ObservableObject {
         focusBlockerCancellable = focusBlocker.objectWillChange.sink { [weak self] _ in
             self?.objectWillChange.send()
         }
+        nowPlayingCancellable = nowPlaying.objectWillChange.sink { [weak self] _ in
+            self?.objectWillChange.send()
+        }
         activityGlanceCancellable = activity.$glance
             .dropFirst()
             .sink { [weak self] _ in
@@ -114,6 +120,7 @@ final class AppModel: ObservableObject {
             }
         setupPowerManagementObservers()
         activity.setRefreshInterval(isExpanded ? 4.0 : 15.0)
+        nowPlaying.resume()
     }
 
     var isExpanded: Bool {
@@ -134,9 +141,25 @@ final class AppModel: ObservableObject {
             browserAvailable: browser.media != nil,
             browserIsPlaying: browser.media?.isPlaying == true,
             browserActivation: browser.playbackActivationDate,
-            musicIsPlaying: music.isPlaying,
-            musicActivation: music.playbackActivationDate
+            musicIsPlaying: music.isPlaying || remoteMediaIsPlaying,
+            musicActivation: max(music.playbackActivationDate, nowPlaying.playbackActivationDate)
         )
+    }
+
+    var musicTabContent: MusicTabContent {
+        MusicTabArbitrator.resolve(
+            musicIsPlaying: music.isPlaying,
+            browserIsPlaying: browser.media?.isPlaying == true,
+            remote: nowPlaying.snapshot
+        )
+    }
+
+    /// Remote media that won the music tab counts as "music playing" for
+    /// the compact-notch arbitration, so the waveform wing behaves the
+    /// same as for desktop Spotify.
+    private var remoteMediaIsPlaying: Bool {
+        if case .remote(let snapshot) = musicTabContent { return snapshot.isPlaying }
+        return false
     }
 
     func updateNotchMetrics(_ metrics: PhysicalNotchMetrics?) {
@@ -615,10 +638,12 @@ final class AppModel: ObservableObject {
     private func pauseServices() {
         music.pause()
         activity.pause()
+        nowPlaying.pause()
     }
 
     private func resumeServices() {
         music.resume()
         activity.resume()
+        nowPlaying.resume()
     }
 }
