@@ -88,7 +88,44 @@ else
     exit 1
 fi
 
+# Bundle the mediaremote-adapter (perl script + compiled framework) used to
+# send play/pause/next commands to the system now-playing app (e.g. browser
+# media). Optional: if vendoring or compilation fails for any reason, never
+# let that abort the script here — the app must still build and get signed
+# so TCC grants survive rebuilds. The service that consumes these resources
+# already handles their absence gracefully (MediaRemoteCommandService.isAvailable).
+if [ -d "$PROJECT_DIR/Vendor/mediaremote-adapter" ]; then
+    if mkdir -p "$CONTENTS_PATH/Resources/MediaRemoteAdapter.framework" \
+        && clang -dynamiclib -fobjc-arc -fvisibility=default \
+            -I"$PROJECT_DIR/Vendor/mediaremote-adapter/include" -I"$PROJECT_DIR/Vendor/mediaremote-adapter/src" \
+            "$PROJECT_DIR"/Vendor/mediaremote-adapter/src/adapter/*.m \
+            "$PROJECT_DIR"/Vendor/mediaremote-adapter/src/private/*.m \
+            "$PROJECT_DIR"/Vendor/mediaremote-adapter/src/utility/*.m \
+            -framework Foundation -framework AppKit -framework UniformTypeIdentifiers \
+            -o "$CONTENTS_PATH/Resources/MediaRemoteAdapter.framework/MediaRemoteAdapter" \
+        && cp "$PROJECT_DIR/Vendor/mediaremote-adapter/bin/mediaremote-adapter.pl" "$CONTENTS_PATH/Resources/"; then
+        echo "Bundled MediaRemoteAdapter.framework and mediaremote-adapter.pl"
+    else
+        echo "warning: failed to build/bundle mediaremote-adapter; media remote controls will be unavailable."
+        rm -rf "$CONTENTS_PATH/Resources/MediaRemoteAdapter.framework"
+        rm -f "$CONTENTS_PATH/Resources/mediaremote-adapter.pl"
+    fi
+else
+    echo "warning: Vendor/mediaremote-adapter not found; skipping media remote controls bundling."
+fi
+
 echo "Signing with identity: $SIGN_IDENTITY"
+
+# The nested framework binary must be signed with the same identity before
+# the outer app signature, otherwise the app's --deep signature (or Gatekeeper
+# validation of the nested code) will be inconsistent.
+if [ -f "$CONTENTS_PATH/Resources/MediaRemoteAdapter.framework/MediaRemoteAdapter" ]; then
+    codesign \
+        --force \
+        --options runtime \
+        --sign "$SIGN_IDENTITY" \
+        "$CONTENTS_PATH/Resources/MediaRemoteAdapter.framework/MediaRemoteAdapter"
+fi
 
 codesign \
     --force \
