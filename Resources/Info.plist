@@ -34,6 +34,8 @@
     <string>Re:notch shows your upcoming Apple Calendar events in the notch.</string>
     <key>NSCalendarsFullAccessUsageDescription</key>
     <string>Re:notch shows your upcoming Apple Calendar events in the notch.</string>
+    <key>NSBluetoothAlwaysUsageDescription</key>
+    <string>Re:notch shows connected Bluetooth audio devices and their battery in the notch.</string>
     <key>NSUserNotificationAlertStyle</key>
     <string>alert</string>
     <key>NSHumanReadableCopyright</key>
