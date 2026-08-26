@@ -372,6 +372,7 @@ struct PlayerPressButtonStyle: ButtonStyle {
 /// volume slider's slot so switching sources never shifts the layout.
 struct RemoteMediaPlayerView: View {
     let snapshot: MediaRemoteNowPlayingSnapshot
+    let artwork: NSImage?
     let commands: MediaRemoteCommandService
     @State private var draggedPosition: Double?
 
@@ -517,9 +518,6 @@ struct RemoteMediaPlayerView: View {
         return NSWorkspace.shared.icon(forFile: url.path)
     }
 
-    private var artwork: NSImage? {
-        snapshot.artworkData.flatMap(NSImage.init(data:))
-    }
 
     private var metadata: String {
         [snapshot.artist, snapshot.album]

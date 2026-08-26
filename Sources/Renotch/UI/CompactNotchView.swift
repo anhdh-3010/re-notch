@@ -98,11 +98,16 @@ struct CompactNotchView: View {
         }
     }
 
-    /// Music-style left wing: the timer ring takes over while a session runs.
+    /// Music-style left wing: the timer ring takes over while a session
+    /// runs; the MediaRemote fallback supplies artwork when it owns the tab.
     @ViewBuilder
     private var musicLeftWing: some View {
         if timer.isActive {
             WingTimerRing(timer: timer)
+        } else if case .remote = model.musicTabContent {
+            AlbumArtworkView(artwork: model.nowPlaying.artwork, cornerRadius: 5)
+                .frame(width: 20, height: 20)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
             WingMusicArtwork(music: music)
         }
@@ -129,7 +134,7 @@ struct CompactNotchView: View {
             case .browserMedia:
                 mediaRightWing(isPlaying: browser.media?.isPlaying == true)
             case .music:
-                mediaRightWing(isPlaying: music.isPlaying)
+                mediaRightWing(isPlaying: music.isPlaying || model.remoteMediaIsPlaying)
             case .configured:
                 configuredRightWing
             }
@@ -149,7 +154,7 @@ struct CompactNotchView: View {
     private var configuredRightWing: some View {
         switch model.settings.resolvedCompactContent {
         case .music:
-            mediaRightWing(isPlaying: music.isPlaying)
+            mediaRightWing(isPlaying: music.isPlaying || model.remoteMediaIsPlaying)
         case .servers:
             ActivityStateDot(state: activity.primaryServerActivity.state)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -180,7 +185,7 @@ struct CompactNotchView: View {
         case .browserMedia:
             return "browser-media-\(browser.media?.sessionID ?? "unknown")-\(timer.isActive ? "timer" : "media")"
         case .music:
-            return "music-\(music.track?.id ?? "unknown")-\(timer.isActive ? "timer" : "media")"
+            return "music-\(musicWingTrackID)-\(timer.isActive ? "timer" : "media")"
         case .configured:
             return "configured-\(model.settings.resolvedCompactContent.rawValue)-\(timer.isActive ? "active" : "idle")"
         }
@@ -207,9 +212,7 @@ struct CompactNotchView: View {
             let base = "\(media.title), \(media.isPlaying ? "playing" : "paused")"
             return timerPrefixedDescription(base)
         case .music:
-            let title = music.track?.title ?? "Music"
-            let base = "\(title), \(music.isPlaying ? "playing" : "paused")"
-            return timerPrefixedDescription(base)
+            return timerPrefixedDescription(musicAccessibilityBase)
         case .configured:
             return configuredAccessibilityDescription
         }
@@ -218,8 +221,7 @@ struct CompactNotchView: View {
     private var configuredAccessibilityDescription: String {
         switch model.settings.resolvedCompactContent {
         case .music:
-            let title = music.track?.title ?? "Music"
-            return timerPrefixedDescription("\(title), \(music.isPlaying ? "playing" : "paused")")
+            return timerPrefixedDescription(musicAccessibilityBase)
         case .servers:
             let server = activity.primaryServerActivity
             return "\(server.title), \(server.state.compactLabel)"
@@ -238,6 +240,23 @@ struct CompactNotchView: View {
             let remaining = todos.remainingCount
             return "\(remaining) \(remaining == 1 ? "task" : "tasks") remaining"
         }
+    }
+
+    private var musicWingTrackID: String {
+        if case .remote(let snapshot) = model.musicTabContent {
+            return "remote-\(snapshot.bundleIdentifier)-\(snapshot.title)"
+        }
+        return music.track?.id ?? "unknown"
+    }
+
+    /// Track title + play state for VoiceOver, preferring the MediaRemote
+    /// fallback when it owns the music surface.
+    private var musicAccessibilityBase: String {
+        if case .remote(let snapshot) = model.musicTabContent {
+            return "\(snapshot.title), \(snapshot.isPlaying ? "playing" : "paused")"
+        }
+        let title = music.track?.title ?? "Music"
+        return "\(title), \(music.isPlaying ? "playing" : "paused")"
     }
 
     /// Prepends the running timer state so VoiceOver announces the ring first.

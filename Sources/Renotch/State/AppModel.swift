@@ -157,7 +157,7 @@ final class AppModel: ObservableObject {
     /// Remote media that won the music tab counts as "music playing" for
     /// the compact-notch arbitration, so the waveform wing behaves the
     /// same as for desktop Spotify.
-    private var remoteMediaIsPlaying: Bool {
+    var remoteMediaIsPlaying: Bool {
         if case .remote(let snapshot) = musicTabContent { return snapshot.isPlaying }
         return false
     }

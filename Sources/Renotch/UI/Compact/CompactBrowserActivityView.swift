@@ -38,6 +38,7 @@ struct ExpandedBrowserMediaView: View {
             }
         }
         .padding(.top, 8)
+        .padding(.bottom, 3)
         .padding(.horizontal, 4)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }

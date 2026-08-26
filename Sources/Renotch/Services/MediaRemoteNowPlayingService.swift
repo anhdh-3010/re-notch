@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 
 /// Streams system-wide now-playing metadata from the bundled
@@ -9,6 +10,7 @@ import Foundation
 final class MediaRemoteNowPlayingService: ObservableObject {
     @Published private(set) var snapshot: MediaRemoteNowPlayingSnapshot?
     @Published private(set) var playbackActivationDate = Date.distantPast
+    @Published private(set) var artwork: NSImage?
 
     private let scriptURL: URL?
     private let frameworkURL: URL?
@@ -18,6 +20,7 @@ final class MediaRemoteNowPlayingService: ObservableObject {
     private var restartDelay: TimeInterval = 1
     private var isPaused = true
     private var isFatallyUnavailable = false
+    private var artworkDataCache: Data?
 
     var isAvailable: Bool {
         scriptURL != nil && frameworkURL != nil && !isFatallyUnavailable
@@ -100,6 +103,11 @@ final class MediaRemoteNowPlayingService: ObservableObject {
             restartDelay = 1  // healthy output resets the backoff
             let becameActive = update?.isPlaying == true && snapshot?.isPlaying != true
             snapshot = update
+            let artworkData = update?.artworkData
+            if artworkData != artworkDataCache {
+                artworkDataCache = artworkData
+                artwork = artworkData.flatMap(NSImage.init(data:))
+            }
             if becameActive {
                 playbackActivationDate = Date()
             }
@@ -110,6 +118,8 @@ final class MediaRemoteNowPlayingService: ObservableObject {
         (process.standardOutput as? Pipe)?.fileHandleForReading.readabilityHandler = nil
         self.process = nil
         snapshot = nil
+        artwork = nil
+        artworkDataCache = nil
         lineBuffer.removeAll()
         accumulator = MediaRemoteStreamAccumulator()
 
