@@ -26,9 +26,13 @@ final class AppModel: ObservableObject {
     @Published private(set) var focusTakeoverAppName: String = ""
     @Published private(set) var focusTakeoverTargetApp: NSRunningApplication?
     @Published private(set) var notchMetrics: PhysicalNotchMetrics?
+    @Published private(set) var activePeekEvent: TransientEvent?
 
     /// Delay before the file drop success state collapses back to compact.
     var successDismissalDelay: TimeInterval = 1.2
+
+    /// Test hook: overrides each event's own duration when set.
+    var peekDismissalDelayOverride: TimeInterval?
 
     let timer: TimerService
     let music: MusicService
@@ -55,6 +59,8 @@ final class AppModel: ObservableObject {
     private var focusBlockerCancellable: AnyCancellable?
     private var modeBeforeFileDrop: NotchMode = .compact
     private var modeBeforeFocusTakeover: NotchMode = .compact
+    private var peekWorkItem: DispatchWorkItem?
+    private var modeBeforePeek: NotchMode = .compact
     private var isApplyingLoginSetting = false
 
     init(defaults: UserDefaults = .standard) {
@@ -262,6 +268,11 @@ final class AppModel: ObservableObject {
         preferSelectedSection: Bool = false
     ) {
         collapseWorkItem?.cancel()
+        if mode == .peek {
+            peekWorkItem?.cancel()
+            peekWorkItem = nil
+            activePeekEvent = nil
+        }
         if preferSelectedSection {
             expandedSectionOverride = section
         } else if mode != .expanded {
@@ -288,7 +299,7 @@ final class AppModel: ObservableObject {
     }
 
     func closeFromOutsideClick() {
-        guard mode != .compact, mode != .fileDrop, mode != .success, mode != .focusTakeover, isPinned else { return }
+        guard mode != .compact, mode != .fileDrop, mode != .success, mode != .focusTakeover, mode != .peek, isPinned else { return }
         collapse(force: true)
     }
 
@@ -319,6 +330,9 @@ final class AppModel: ObservableObject {
             collapseWorkItem?.cancel()
             successWorkItem?.cancel()
             guard mode != .fileDrop else { return }
+            if mode == .peek {
+                dismissPeek()
+            }
             if mode != .success {
                 modeBeforeFileDrop = mode
             }
@@ -333,6 +347,70 @@ final class AppModel: ObservableObject {
         }
         dropExitWorkItem = work
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.15, execute: work)
+    }
+
+    /// Entry point for TransientEventService. Applies side effects that must
+    /// happen regardless of presentation (shelf auto-add), then the
+    /// iPhone-style presentation rules: latest event wins, short-lived drop
+    /// modes swallow events, focus takeover shows a minimal strip only.
+    func handleTransientEvent(_ event: TransientEvent) {
+        if case let .screenshot(url) = event.kind,
+           settings.resolvedPeekScreenshotAutoAddToShelf {
+            shelf.add([url])
+        }
+
+        switch mode {
+        case .fileDrop, .success:
+            return
+        case .focusTakeover:
+            // Keep the takeover mode; FocusTakeoverView renders the event
+            // as a one-line strip and we only auto-clear the event.
+            activePeekEvent = event
+            schedulePeekDismissal(after: peekDismissalDelayOverride ?? event.duration)
+            return
+        case .compact, .expanded, .peek:
+            break
+        }
+
+        if mode != .peek {
+            modeBeforePeek = mode
+            mode = .peek
+        }
+        activePeekEvent = event
+        onPanelConfigurationChanged?()
+        schedulePeekDismissal(after: peekDismissalDelayOverride ?? event.duration)
+    }
+
+    func dismissPeek() {
+        peekWorkItem?.cancel()
+        peekWorkItem = nil
+        guard activePeekEvent != nil else { return }
+        activePeekEvent = nil
+        guard mode == .peek else { return }
+        mode = modeBeforePeek
+        onPanelConfigurationChanged?()
+    }
+
+    /// Click action for the peek surface: screenshots open and reveal the
+    /// shelf, everything else just collapses early.
+    func peekTapped() {
+        guard let event = activePeekEvent else { return }
+        if case let .screenshot(url) = event.kind {
+            dismissPeek()
+            NSWorkspace.shared.open(url)
+            expand(section: .shelf)
+            return
+        }
+        dismissPeek()
+    }
+
+    private func schedulePeekDismissal(after delay: TimeInterval) {
+        peekWorkItem?.cancel()
+        let work = DispatchWorkItem { [weak self] in
+            self?.dismissPeek()
+        }
+        peekWorkItem = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: work)
     }
 
     @discardableResult

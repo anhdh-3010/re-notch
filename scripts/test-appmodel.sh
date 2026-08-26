@@ -12,6 +12,7 @@ swiftc \
     Sources/Renotch/Models/NotchGeometry.swift \
     Sources/Renotch/Models/BrowserActivityModels.swift \
     Sources/Renotch/Models/DeveloperActivityGlance.swift \
+    Sources/Renotch/Models/TransientEventModels.swift \
     Sources/Renotch/Services/SettingsStore.swift \
     Sources/Renotch/Services/TimerService.swift \
     Sources/Renotch/Services/ShelfStore.swift \
