@@ -100,6 +100,11 @@ final class AppleCalendarService: ObservableObject {
                     // denied (e.g. stale TCC entry). Point the user to Settings.
                     self?.errorMessage = "Calendar access is disabled. Enable it in System Settings."
                 }
+                if granted {
+                    // The store predates the grant; without a reset it can keep
+                    // returning empty results until the app relaunches.
+                    self?.eventStore.reset()
+                }
                 self?.refreshAuthorizationState()
                 self?.refresh()
             }

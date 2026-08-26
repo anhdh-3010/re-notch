@@ -68,7 +68,15 @@ if [ -f "$PROJECT_DIR/Sources/Renotch/Resources/TrayIconTemplate.png" ]; then
     cp "$PROJECT_DIR/Sources/Renotch/Resources/TrayIconTemplate.png" "$CONTENTS_PATH/Resources/"
 fi
 cp "$PROJECT_DIR/Resources/Info.plist" "$CONTENTS_PATH/Info.plist"
-cp -R "$PROJECT_DIR/BrowserExtension" "$CONTENTS_PATH/Resources/BrowserExtension"
+# Optional: the app tolerates a missing BrowserExtension bundle. Never let a
+# missing folder abort the script here — bailing out before codesign leaves an
+# unsigned app whose TCC identity (cdhash) changes every build, breaking
+# Calendar permission grants.
+if [ -d "$PROJECT_DIR/BrowserExtension" ]; then
+    cp -R "$PROJECT_DIR/BrowserExtension" "$CONTENTS_PATH/Resources/BrowserExtension"
+else
+    echo "warning: BrowserExtension folder not found; skipping."
+fi
 
 # Use custom AppIcon.icns from project root
 CUSTOM_ICON="$PROJECT_DIR/AppIcon.icns"
