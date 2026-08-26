@@ -8,16 +8,39 @@ import QuickLookThumbnailing
 struct PeekView: View {
     @EnvironmentObject private var model: AppModel
     let event: TransientEvent
+    /// When true, forces the single-line "strip" layout regardless of the
+    /// event's normal presentation style. Used by the focus-takeover overlay,
+    /// which floats independently of the physical notch cutout and needs a
+    /// consistent icon + short text row for every event kind rather than the
+    /// droop layout's compact-notch-coupled vertical offset.
+    var isStrip: Bool = false
 
     var body: some View {
         Group {
-            switch event.presentationStyle {
-            case .wings: wingsLayout
-            case .droop: droopLayout
+            if isStrip {
+                stripLayout
+            } else {
+                switch event.presentationStyle {
+                case .wings: wingsLayout
+                case .droop: droopLayout
+                }
             }
         }
         .contentShape(Rectangle())
         .onTapGesture { model.peekTapped() }
+    }
+
+    /// Wings-equivalent single-line layout for the focus-takeover strip:
+    /// icon + short text, no compact-content padding coupling (there is no
+    /// physical notch cutout to route around here) and no vertical offset.
+    private var stripLayout: some View {
+        HStack(spacing: 10) {
+            leadingContent
+            Spacer(minLength: 0)
+            trailingContent
+        }
+        .padding(.horizontal, 14)
+        .font(.system(size: 12, weight: .semibold))
     }
 
     private var wingsLayout: some View {

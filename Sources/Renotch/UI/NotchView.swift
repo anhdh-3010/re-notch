@@ -136,7 +136,7 @@ struct NotchView: View {
                 )
                 .overlay(alignment: .top) {
                     if let event = model.activePeekEvent {
-                        PeekView(event: event)
+                        PeekView(event: event, isStrip: true)
                             .frame(maxWidth: 360)
                             .frame(height: 30)
                             .padding(.top, 6)

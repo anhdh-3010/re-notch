@@ -1,3 +1,4 @@
+import CoreBluetooth
 import SwiftUI
 
 private enum GlassMaterialLevel: Double, CaseIterable, Identifiable {
@@ -638,6 +639,31 @@ struct SettingsView: View {
                             .labelsHidden()
                     }
 
+                    if CBCentralManager.authorization == .denied {
+                        Divider().opacity(0.12).padding(.vertical, 8)
+
+                        HStack(spacing: 12) {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Bluetooth Permission Needed")
+                                    .font(.system(size: 13, weight: .medium))
+                                    .foregroundStyle(.primary)
+
+                                Text("Enable Bluetooth access in System Settings to receive Bluetooth peeks.")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+
+                            Spacer()
+
+                            Button("Open System Settings…") {
+                                openBluetoothPrivacySettings()
+                            }
+                            .buttonStyle(.borderedProminent)
+                            .controlSize(.small)
+                            .tint(.blue)
+                        }
+                    }
+
                     Divider().opacity(0.12).padding(.vertical, 8)
 
                     SettingRow(
@@ -672,7 +698,9 @@ struct SettingsView: View {
                             .labelsHidden()
                     }
 
-                    if model.settings.resolvedPeekCapsLockEnabled == false && !CapsLockEventSource.hasListenPermission {
+                    if model.settings.resolvedDidAttemptCapsLockPermission
+                        && model.settings.resolvedPeekCapsLockEnabled == false
+                        && !CapsLockEventSource.hasListenPermission {
                         Divider().opacity(0.12).padding(.vertical, 8)
 
                         HStack(spacing: 12) {
@@ -777,16 +805,27 @@ struct SettingsView: View {
                     // leave the toggle off; the user re-enables after granting access.
                     guard CapsLockEventSource.hasListenPermission else {
                         model.settings.peekCapsLockEnabled = false
+                        model.settings.didAttemptCapsLockPermission = true
                         return
                     }
                 }
                 model.settings.peekCapsLockEnabled = enabled
+                if CapsLockEventSource.hasListenPermission {
+                    model.settings.didAttemptCapsLockPermission = false
+                }
             }
         )
     }
 
     private func openCapsLockPrivacySettings() {
         guard let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ListenEvent") else {
+            return
+        }
+        NSWorkspace.shared.open(url)
+    }
+
+    private func openBluetoothPrivacySettings() {
+        guard let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Bluetooth") else {
             return
         }
         NSWorkspace.shared.open(url)

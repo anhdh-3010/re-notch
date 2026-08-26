@@ -168,6 +168,11 @@ struct NotchSettings: Codable, Equatable {
     var peekScreenshotEnabled: Bool? = true
     var peekCapsLockEnabled: Bool? = false
     var peekScreenshotAutoAddToShelf: Bool? = false
+    /// Set when the user actually tried to enable Caps Lock peeks and Input
+    /// Monitoring permission was not granted. Gates the "permission needed"
+    /// banner so it doesn't show for every fresh install that never touched
+    /// the toggle.
+    var didAttemptCapsLockPermission: Bool? = false
 
     static let `default` = NotchSettings()
 
@@ -263,6 +268,7 @@ struct NotchSettings: Codable, Equatable {
     var resolvedPeekScreenshotEnabled: Bool { peekScreenshotEnabled ?? true }
     var resolvedPeekCapsLockEnabled: Bool { peekCapsLockEnabled ?? false }
     var resolvedPeekScreenshotAutoAddToShelf: Bool { peekScreenshotAutoAddToShelf ?? false }
+    var resolvedDidAttemptCapsLockPermission: Bool { didAttemptCapsLockPermission ?? false }
 
     func isPeekSourceEnabled(_ kind: PeekSourceKind) -> Bool {
         switch kind {

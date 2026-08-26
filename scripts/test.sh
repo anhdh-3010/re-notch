@@ -28,3 +28,5 @@ swiftc \
 "$TEST_BINARY"
 
 "$SCRIPT_DIR/test-appmodel.sh"
+"$SCRIPT_DIR/test-peek.sh"
+"$SCRIPT_DIR/test-transient-service.sh"
