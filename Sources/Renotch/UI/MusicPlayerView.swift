@@ -323,10 +323,11 @@ struct AudioWaveform: View {
     }
 }
 
-private struct PlayerControlButton: View {
+struct PlayerControlButton: View {
     let icon: String
     let title: String
     let size: CGFloat
+    var iconSize: CGFloat = 10
     var isActive = false
     var activeColor: Color = .white
     let action: () -> Void
@@ -335,7 +336,7 @@ private struct PlayerControlButton: View {
     var body: some View {
         Button(action: action) {
             Image(systemName: icon)
-                .font(.system(size: 10, weight: .semibold))
+                .font(.system(size: iconSize, weight: .semibold))
                 .foregroundStyle(isActive ? activeColor : .white.opacity(0.86))
                 .frame(width: size, height: size)
                 .background(
@@ -356,7 +357,7 @@ private struct PlayerControlButton: View {
     }
 }
 
-private struct PlayerPressButtonStyle: ButtonStyle {
+struct PlayerPressButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .scaleEffect(configuration.isPressed ? 0.92 : 1)

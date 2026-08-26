@@ -2,32 +2,14 @@ import AppKit
 import SwiftUI
 
 struct ExpandedBrowserMediaView: View {
+    @EnvironmentObject private var model: AppModel
     let media: BrowserMediaActivity
     let artwork: NSImage?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 13) {
-                Group {
-                    if let artwork {
-                        Image(nsImage: artwork)
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                    } else {
-                        ZStack {
-                            Color(red: 0.78, green: 0.05, blue: 0.08)
-                            Image(systemName: "play.fill")
-                                .font(.system(size: 18, weight: .bold))
-                                .foregroundStyle(.white)
-                        }
-                    }
-                }
-                .frame(width: 104, height: 58)
-                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-                .overlay {
-                    RoundedRectangle(cornerRadius: 10, style: .continuous)
-                        .stroke(Color.white.opacity(0.1), lineWidth: 0.7)
-                }
+            HStack(alignment: .center, spacing: 12) {
+                thumbnail
 
                 VStack(alignment: .leading, spacing: 3) {
                     HStack(spacing: 5) {
@@ -46,23 +28,17 @@ struct ExpandedBrowserMediaView: View {
                         .font(.system(size: 12.5, weight: .semibold))
                         .foregroundStyle(.white)
                         .lineLimit(1)
+                        .truncationMode(.tail)
                     Text(media.channel)
                         .font(.system(size: 9, weight: .medium))
                         .foregroundStyle(Color.notchMuted)
                         .lineLimit(1)
-
-                    if let pageURL = media.pageURL {
-                        Button {
-                            NSWorkspace.shared.open(pageURL)
-                        } label: {
-                            Label("Open video", systemImage: "arrow.up.right")
-                                .font(.system(size: 8.5, weight: .semibold))
-                        }
-                        .buttonStyle(.plain)
-                        .foregroundStyle(.white.opacity(0.82))
-                    }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
+
+                if model.mediaRemote.isAvailable {
+                    controls
+                }
             }
 
             if let progress = media.progress {
@@ -84,6 +60,64 @@ struct ExpandedBrowserMediaView: View {
         }
         .padding(.top, 8)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+    }
+
+    private var thumbnail: some View {
+        Group {
+            if let artwork {
+                Image(nsImage: artwork)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+            } else {
+                ZStack {
+                    Color(red: 0.78, green: 0.05, blue: 0.08)
+                    Image(systemName: "play.fill")
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundStyle(.white)
+                }
+            }
+        }
+        .frame(width: 88, height: 50)
+        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .stroke(Color.white.opacity(0.1), lineWidth: 0.7)
+        }
+        .overlay(alignment: .topTrailing) {
+            if let pageURL = media.pageURL {
+                Button {
+                    NSWorkspace.shared.open(pageURL)
+                } label: {
+                    Image(systemName: "arrow.up.right")
+                        .font(.system(size: 8, weight: .bold))
+                        .foregroundStyle(.white)
+                        .frame(width: 16, height: 16)
+                        .background(Circle().fill(Color.black.opacity(0.55)))
+                }
+                .buttonStyle(.plain)
+                .padding(3)
+                .help("Open video")
+            }
+        }
+    }
+
+    private var controls: some View {
+        HStack(spacing: 6) {
+            PlayerControlButton(
+                icon: media.isPlaying ? "pause.fill" : "play.fill",
+                title: media.isPlaying ? "Pause" : "Play",
+                size: 26,
+                iconSize: 11,
+                action: { model.mediaRemote.send(.togglePlayPause) }
+            )
+            PlayerControlButton(
+                icon: "forward.fill",
+                title: "Next",
+                size: 20,
+                iconSize: 9,
+                action: { model.mediaRemote.send(.nextTrack) }
+            )
+        }
     }
 
     private func formatted(_ value: TimeInterval) -> String {
