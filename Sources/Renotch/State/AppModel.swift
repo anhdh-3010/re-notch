@@ -190,8 +190,25 @@ final class AppModel: ObservableObject {
             let screen = NSScreen.main?.frame.size ?? NSSize(width: 1440, height: 900)
             return screen
         case .peek:
-            // Placeholder; Task 4 replaces this with peek-specific sizing.
-            return NSSize(width: NotchSettings.dragWidth, height: NotchSettings.dragHeight)
+            guard let event = activePeekEvent else {
+                return NSSize(width: NotchSettings.dragWidth, height: NotchSettings.dragHeight)
+            }
+            switch event.presentationStyle {
+            case .wings:
+                let size = NotchGeometry.compactSize(
+                    notch: notchMetrics,
+                    wings: WingWidths(
+                        left: NotchGeometry.peekWingWidth,
+                        right: NotchGeometry.peekWingWidth
+                    ),
+                    leadingPadding: CGFloat(settings.resolvedCompactContentLeadingPadding),
+                    trailingPadding: CGFloat(settings.resolvedCompactContentTrailingPadding)
+                )
+                return NSSize(width: size.width, height: size.height)
+            case .droop:
+                let size = NotchGeometry.peekDroopSize(notch: notchMetrics)
+                return NSSize(width: size.width, height: size.height)
+            }
         }
     }
 

@@ -10,8 +10,12 @@ struct NotchView: View {
         switch model.mode {
         case .compact:
             return CGFloat(model.settings.resolvedCompactCornerRadius)
-        case .expanded, .fileDrop, .success, .peek:
+        case .expanded, .fileDrop, .success:
             return 18
+        case .peek:
+            return model.activePeekEvent?.presentationStyle == .droop
+                ? 18
+                : CGFloat(model.settings.resolvedCompactCornerRadius)
         case .focusTakeover:
             return 0
         }
@@ -21,7 +25,11 @@ struct NotchView: View {
         switch model.mode {
         case .compact: return CGFloat(model.settings.resolvedCompactCornerRadius)
         case .expanded: return 26
-        case .fileDrop, .success, .peek: return 30
+        case .fileDrop, .success: return 30
+        case .peek:
+            return model.activePeekEvent?.presentationStyle == .droop
+                ? 22
+                : CGFloat(model.settings.resolvedCompactCornerRadius)
         case .focusTakeover: return 0
         }
     }
@@ -38,7 +46,8 @@ struct NotchView: View {
         case .compact: return isHovering ? 0.18 : 0
         case .expanded: return 0.38
         case .fileDrop: return 0.62
-        case .success, .peek: return 0.42
+        case .success: return 0.42
+        case .peek: return 0.34
         case .focusTakeover: return 0.65
         }
     }
@@ -48,7 +57,8 @@ struct NotchView: View {
         case .compact: return isHovering ? 8 : 0
         case .expanded: return 14
         case .fileDrop: return 20
-        case .success, .peek: return 16
+        case .success: return 16
+        case .peek: return 12
         case .focusTakeover: return 32
         }
     }
@@ -87,8 +97,11 @@ struct NotchView: View {
             return .spring(response: 0.5, dampingFraction: 0.62)
         case .fileDrop:
             return .spring(response: 0.28, dampingFraction: 0.78)
-        case .success, .peek:
+        case .success:
             return .spring(response: 0.28, dampingFraction: 0.82)
+        case .peek:
+            // Dynamic Island-style bounce.
+            return .spring(response: 0.45, dampingFraction: 0.65)
         case .focusTakeover:
             return .spring(response: 0.52, dampingFraction: 0.92)
         }
@@ -121,6 +134,14 @@ struct NotchView: View {
                     site: model.focusTakeoverSite,
                     appName: model.focusTakeoverAppName
                 )
+                .overlay(alignment: .top) {
+                    if let event = model.activePeekEvent {
+                        PeekView(event: event)
+                            .frame(height: 30)
+                            .padding(.top, 6)
+                            .transition(.opacity)
+                    }
+                }
                 .transition(.opacity)
             } else {
                 notchSurface
@@ -143,9 +164,12 @@ struct NotchView: View {
                 FileDropSuccessView()
                     .transition(contentTransition)
             case .peek:
-                // Placeholder; Task 4 replaces this with the real peek content view.
-                FileDropSuccessView()
-                    .transition(contentTransition)
+                if let event = model.activePeekEvent {
+                    PeekView(event: event)
+                        .transition(contentTransition)
+                } else {
+                    EmptyView()
+                }
             case .focusTakeover:
                 EmptyView()
             case .compact:

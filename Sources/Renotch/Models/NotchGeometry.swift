@@ -24,6 +24,21 @@ enum NotchGeometry {
     /// Widest wing used while a transient message is displayed.
     static let messageWingWidth: CGFloat = 120
 
+    /// Width of each wing when a wings-style peek is showing.
+    static let peekWingWidth: CGFloat = 104
+
+    /// Size of a droop-style peek: wider and taller than the physical notch,
+    /// Dynamic Island-style. Falls back to virtual-notch defaults when no
+    /// hardware notch metrics are available.
+    static func peekDroopSize(notch: PhysicalNotchMetrics?) -> CGSize {
+        let notchWidth = notch?.width ?? 200
+        let notchHeight = notch?.height ?? 32
+        return CGSize(
+            width: max(notchWidth + 150, 340),
+            height: notchHeight + 34
+        )
+    }
+
     /// Derives the hardware notch size from raw screen values.
     /// Returns nil when the screen has no notch.
     static func metrics(
