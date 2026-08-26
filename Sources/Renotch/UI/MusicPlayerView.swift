@@ -365,3 +365,165 @@ struct PlayerPressButtonStyle: ButtonStyle {
             .animation(.easeOut(duration: 0.1), value: configuration.isPressed)
     }
 }
+
+/// Variant A of the MediaRemote fallback player: identical geometry to
+/// MusicPlayerView (82pt artwork, title row, seek row, left control pill)
+/// with the unsupported controls removed — the source badge fills the
+/// volume slider's slot so switching sources never shifts the layout.
+struct RemoteMediaPlayerView: View {
+    let snapshot: MediaRemoteNowPlayingSnapshot
+    let commands: MediaRemoteCommandService
+    @State private var draggedPosition: Double?
+
+    var body: some View {
+        HStack(spacing: 14) {
+            AlbumArtworkView(artwork: artwork, cornerRadius: 12)
+                .frame(width: 82, height: 82)
+                .shadow(color: .black.opacity(0.45), radius: 10, y: 5)
+
+            VStack(alignment: .leading, spacing: 6) {
+                HStack(alignment: .top, spacing: 8) {
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text(snapshot.title)
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(.white)
+                            .lineLimit(1)
+                        Text(metadata)
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundStyle(Color.notchMuted)
+                            .lineLimit(1)
+                    }
+                    Spacer(minLength: 6)
+                    HStack(spacing: 4) {
+                        Circle()
+                            .fill(snapshot.isPlaying ? Color.musicAccent : Color.white.opacity(0.28))
+                            .frame(width: 5, height: 5)
+                        Text(snapshot.isPlaying ? "Playing" : "Paused")
+                    }
+                    .font(.system(size: 8.5, weight: .semibold))
+                    .foregroundStyle(.secondary)
+                    .accessibilityLabel(
+                        "Playback status: \(snapshot.isPlaying ? "playing" : "paused")"
+                    )
+                }
+
+                TimelineView(.periodic(from: .now, by: 1)) { context in
+                    seekRow(now: context.date)
+                }
+
+                HStack(spacing: 8) {
+                    HStack(spacing: 4) {
+                        PlayerControlButton(
+                            icon: "backward.fill",
+                            title: "Previous",
+                            size: 27,
+                            action: { commands.send(.previousTrack) }
+                        )
+                        Button(action: { commands.send(.togglePlayPause) }) {
+                            Image(systemName: snapshot.isPlaying ? "pause.fill" : "play.fill")
+                                .font(.system(size: 12, weight: .bold))
+                                .foregroundStyle(.black)
+                                .frame(width: 32, height: 32)
+                                .background(Circle().fill(.white))
+                                .contentShape(Circle())
+                        }
+                        .buttonStyle(PlayerPressButtonStyle())
+                        .help(snapshot.isPlaying ? "Pause" : "Play")
+                        PlayerControlButton(
+                            icon: "forward.fill",
+                            title: "Next",
+                            size: 27,
+                            action: { commands.send(.nextTrack) }
+                        )
+                    }
+                    .padding(.horizontal, 4)
+                    .frame(height: 36)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .fill(Color.white.opacity(0.045))
+                    )
+
+                    Spacer(minLength: 8)
+
+                    sourceBadge
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+        .padding(.top, 8)
+    }
+
+    private func seekRow(now: Date) -> some View {
+        let position = draggedPosition ?? snapshot.position(at: now)
+        return HStack(spacing: 7) {
+            Text(MusicService.formattedTime(position))
+                .frame(width: 28, alignment: .leading)
+            Slider(
+                value: Binding(
+                    get: { position },
+                    set: { draggedPosition = $0 }
+                ),
+                in: 0...max(snapshot.duration, 1),
+                onEditingChanged: { editing in
+                    guard !editing, let draggedPosition else { return }
+                    commands.seek(to: draggedPosition)
+                    self.draggedPosition = nil
+                }
+            )
+            .tint(Color.musicAccent)
+            Text("−" + MusicService.formattedTime(max(0, snapshot.duration - position)))
+                .frame(width: 36, alignment: .trailing)
+        }
+        .font(.system(size: 8, weight: .medium, design: .rounded))
+        .monospacedDigit()
+        .foregroundStyle(Color.notchMuted)
+    }
+
+    private var sourceBadge: some View {
+        HStack(spacing: 5) {
+            if let icon = sourceAppIcon {
+                Image(nsImage: icon)
+                    .resizable()
+                    .frame(width: 13, height: 13)
+            }
+            Text(sourceAppName.uppercased())
+                .font(.system(size: 8.5, weight: .bold))
+                .tracking(0.6)
+                .foregroundStyle(Color.notchMuted)
+        }
+        .padding(.horizontal, 8)
+        .frame(height: 24)
+        .background(
+            RoundedRectangle(cornerRadius: 9, style: .continuous)
+                .stroke(Color.white.opacity(0.14), lineWidth: 1)
+        )
+        .accessibilityLabel("Source: \(sourceAppName)")
+    }
+
+    private var sourceAppURL: URL? {
+        NSWorkspace.shared.urlForApplication(
+            withBundleIdentifier: snapshot.bundleIdentifier
+        )
+    }
+
+    private var sourceAppName: String {
+        guard let url = sourceAppURL else { return snapshot.bundleIdentifier }
+        return FileManager.default.displayName(atPath: url.path)
+            .replacingOccurrences(of: ".app", with: "")
+    }
+
+    private var sourceAppIcon: NSImage? {
+        guard let url = sourceAppURL else { return nil }
+        return NSWorkspace.shared.icon(forFile: url.path)
+    }
+
+    private var artwork: NSImage? {
+        snapshot.artworkData.flatMap(NSImage.init(data:))
+    }
+
+    private var metadata: String {
+        [snapshot.artist, snapshot.album]
+            .filter { !$0.isEmpty }
+            .joined(separator: " · ")
+    }
+}
