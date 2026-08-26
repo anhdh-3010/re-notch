@@ -82,7 +82,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private static func makeTransientSources() -> [PeekSourceKind: TransientEventSource] {
         [
             .charging: PowerEventSource(),
-            .bluetooth: BluetoothEventSource()
+            .bluetooth: BluetoothEventSource(),
+            .screenshot: ScreenshotEventSource()
         ]
     }
 
