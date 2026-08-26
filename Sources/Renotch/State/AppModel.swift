@@ -198,7 +198,7 @@ final class AppModel: ObservableObject {
     func hoverChanged(_ hovering: Bool) {
         collapseWorkItem?.cancel()
         guard !isDraggingFileOver else { return }
-        guard mode != .fileDrop, mode != .success, mode != .focusTakeover else { return }
+        guard mode != .fileDrop, mode != .success, mode != .focusTakeover, mode != .peek else { return }
         guard settings.expandOnHover else { return }
         if hovering {
             if mode == .compact {
@@ -234,6 +234,9 @@ final class AppModel: ObservableObject {
     func triggerFocusTakeover(site: String, appName: String, targetApp: NSRunningApplication?) {
         guard mode != .focusTakeover else { return }
         collapseWorkItem?.cancel()
+        if mode == .peek {
+            dismissPeek()
+        }
         modeBeforeFocusTakeover = (mode == .focusTakeover ? .compact : mode)
         focusTakeoverSite = site
         focusTakeoverAppName = appName

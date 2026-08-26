@@ -107,6 +107,47 @@ struct AppModelPeekTests {
             expect(model.mode == .focusTakeover, "takeover survives event clear")
         }
 
+        // Focus takeover starting while peeking must not strand the notch in
+        // .peek: it should capture the mode that was active before the peek
+        // began, clear the peek state, and restore that mode on dismissal.
+        do {
+            let model = makeModel()
+            model.handleTransientEvent(chargingEvent)
+            expect(model.mode == .peek, "fixture: peek entered from compact")
+            model.triggerFocusTakeover(site: "example.com", appName: "Safari", targetApp: nil)
+            expect(model.mode == .focusTakeover, "takeover entered from peek")
+            expect(model.activePeekEvent == nil, "peek event cleared when takeover starts from peek")
+            model.dismissFocusTakeover()
+            expect(model.mode == .compact, "takeover restores the pre-peek mode, not .peek")
+            expect(
+                !waitUntil(timeout: 0.2) { model.mode == .peek },
+                "no stray peek timer resurrects peek mode after takeover ends"
+            )
+        }
+
+        do {
+            let model = makeModel()
+            model.expand()
+            model.handleTransientEvent(chargingEvent)
+            expect(model.mode == .peek, "fixture: peek entered from expanded")
+            model.triggerFocusTakeover(site: "example.com", appName: "Safari", targetApp: nil)
+            model.dismissFocusTakeover()
+            expect(model.mode == .expanded, "takeover restores expanded mode when peek began from expanded")
+        }
+
+        // Hover-out during an active peek must not force an immediate collapse
+        // (peeks auto-dismiss on their own timer, mirroring iPhone semantics).
+        do {
+            let model = makeModel()
+            model.expand()
+            model.handleTransientEvent(chargingEvent)
+            expect(model.mode == .peek, "fixture: peek entered from expanded")
+            model.hoverChanged(false)
+            expect(model.mode == .peek, "hover-out does not collapse an active peek")
+            expect(model.activePeekEvent == chargingEvent, "hover-out leaves the peek event intact")
+            expect(waitUntil { model.mode == .expanded }, "peek still auto-restores to expanded after hover-out")
+        }
+
         // Tapping a screenshot peek expands the shelf.
         do {
             let model = makeModel()
