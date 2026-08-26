@@ -63,7 +63,7 @@ struct SmokeTests {
         expect(NotchSettings.default.compactWidth == 548, "collapsed width")
         expect(NotchSettings.default.compactHeight == 30, "recommended compact height")
         expect(NotchSettings.default.expandedWidth == 548, "recommended expanded width")
-        expect(NotchSettings.default.expandedHeight == 209, "expanded menu height")
+        expect(NotchSettings.default.expandedHeight == 190, "expanded menu height")
         expect(NotchSettings.codingExpandedWidth == 500, "coding menu width")
         expect(NotchSettings.codingExpandedHeight == 240, "coding menu height")
         expect(NotchSettings.expandedMinWidth == 440, "expanded header minimum width")
@@ -76,7 +76,7 @@ struct SmokeTests {
         expect(NotchSettings.default.resolvedExpandedContentTrailingPadding == 28, "default expanded content trailing padding")
         expect(NotchSettings.default.resolvedExpandedContentTopPadding == 38, "default expanded content top padding includes hardware notch clearance")
         expect(NotchSettings.default.resolvedAvoidHardwareNotch, "avoid hardware notch defaults on")
-        expect(NotchSettings.default.resolvedExpandedContentBottomPadding == 14, "default expanded content bottom padding")
+        expect(NotchSettings.default.resolvedExpandedContentBottomPadding == 8, "default expanded content bottom padding")
         expect(NotchSettings.dragWidth == 500, "drag width")
         expect(NotchSettings.dragHeight == 120, "drag height")
 
@@ -604,7 +604,7 @@ struct SmokeTests {
         expect(migrated.compactWidth == 548, "legacy compact width migration")
         expect(migrated.compactHeight == 30, "legacy compact height migration")
         expect(migrated.expandedWidth == 548, "legacy expanded width migration")
-        expect(migrated.expandedHeight == 209, "legacy expanded height migration")
+        expect(migrated.expandedHeight == 190, "legacy expanded height migration")
 
         if failures.isEmpty {
             print("All Re:notch smoke tests passed.")

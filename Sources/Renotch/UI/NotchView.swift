@@ -10,7 +10,9 @@ struct NotchView: View {
         switch model.mode {
         case .compact:
             return CGFloat(model.settings.resolvedCompactCornerRadius)
-        case .expanded, .fileDrop, .success:
+        case .expanded:
+            return 20
+        case .fileDrop, .success:
             return 18
         case .peek:
             return model.activePeekEvent?.presentationStyle == .droop
@@ -24,7 +26,7 @@ struct NotchView: View {
     private var bottomCornerRadius: CGFloat {
         switch model.mode {
         case .compact: return CGFloat(model.settings.resolvedCompactCornerRadius)
-        case .expanded: return 26
+        case .expanded: return 32
         case .fileDrop, .success: return 30
         case .peek:
             return model.activePeekEvent?.presentationStyle == .droop

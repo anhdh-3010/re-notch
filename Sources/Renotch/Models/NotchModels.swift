@@ -137,7 +137,7 @@ struct NotchSettings: Codable, Equatable {
     var expandedContentLeadingPadding: Double? = 28
     var expandedContentTrailingPadding: Double? = 28
     var expandedContentTopPadding: Double? = 12
-    var expandedContentBottomPadding: Double? = 14
+    var expandedContentBottomPadding: Double? = 8
     /// Optional so settings written before hardware notch accommodation still decode.
     var avoidHardwareNotch: Bool? = true
     /// Optional so settings written before configurable navigation styles still decode.
@@ -159,7 +159,7 @@ struct NotchSettings: Codable, Equatable {
     var compactWidth = 548.0
     var compactHeight = 30.0
     var expandedWidth = 548.0
-    var expandedHeight = 209.0
+    var expandedHeight = 190.0
     var collapseDelay = 0.45
     var verticalOffset = 0.0
     /// Optional so settings written before peek notifications still decode.
@@ -238,7 +238,7 @@ struct NotchSettings: Codable, Equatable {
     }
 
     var resolvedExpandedContentBottomPadding: Double {
-        (expandedContentBottomPadding ?? 14).clamped(to: Self.expandedContentPaddingRange)
+        (expandedContentBottomPadding ?? 8).clamped(to: Self.expandedContentPaddingRange)
     }
 
     var resolvedFocusBlockerEnabled: Bool {
