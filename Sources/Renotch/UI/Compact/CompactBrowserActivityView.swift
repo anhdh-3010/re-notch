@@ -8,10 +8,10 @@ struct ExpandedBrowserMediaView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            HStack(alignment: .center, spacing: 12) {
+            HStack(alignment: .center, spacing: 14) {
                 thumbnail
 
-                VStack(alignment: .leading, spacing: 3) {
+                VStack(alignment: .leading, spacing: 4) {
                     HStack(spacing: 5) {
                         Image(systemName: "play.rectangle.fill")
                         Text("YOUTUBE")
@@ -27,7 +27,7 @@ struct ExpandedBrowserMediaView: View {
                     Text(media.title)
                         .font(.system(size: 12.5, weight: .semibold))
                         .foregroundStyle(.white)
-                        .lineLimit(1)
+                        .lineLimit(2)
                         .truncationMode(.tail)
                     Text(media.channel)
                         .font(.system(size: 9, weight: .medium))
@@ -40,6 +40,7 @@ struct ExpandedBrowserMediaView: View {
                     controls
                 }
             }
+            .frame(maxHeight: .infinity, alignment: .center)
 
             if let progress = media.progress {
                 HStack(spacing: 8) {
@@ -72,15 +73,15 @@ struct ExpandedBrowserMediaView: View {
                 ZStack {
                     Color(red: 0.78, green: 0.05, blue: 0.08)
                     Image(systemName: "play.fill")
-                        .font(.system(size: 16, weight: .bold))
+                        .font(.system(size: 26, weight: .bold))
                         .foregroundStyle(.white)
                 }
             }
         }
-        .frame(width: 88, height: 50)
-        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .frame(width: 160, height: 90)
+        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         .overlay {
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
                 .stroke(Color.white.opacity(0.1), lineWidth: 0.7)
         }
         .overlay(alignment: .topTrailing) {
