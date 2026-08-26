@@ -80,7 +80,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     // Transient peek events (charger, AirPods, screenshots, Caps Lock).
     // Sources are registered here as they are implemented (Tasks 5-8).
     private static func makeTransientSources() -> [PeekSourceKind: TransientEventSource] {
-        [.charging: PowerEventSource()]
+        [
+            .charging: PowerEventSource(),
+            .bluetooth: BluetoothEventSource()
+        ]
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
