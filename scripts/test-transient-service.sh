@@ -13,6 +13,7 @@ swiftc \
     Sources/Renotch/Models/BrowserActivityModels.swift \
     Sources/Renotch/Models/DeveloperActivityGlance.swift \
     Sources/Renotch/Models/TransientEventModels.swift \
+    Sources/Renotch/Models/MediaRemoteNowPlayingModels.swift \
     Sources/Renotch/Services/SettingsStore.swift \
     Sources/Renotch/Services/TimerService.swift \
     Sources/Renotch/Services/ShelfStore.swift \
@@ -25,6 +26,7 @@ swiftc \
     Sources/Renotch/Services/NotificationService.swift \
     Sources/Renotch/Services/FocusBlockerService.swift \
     Sources/Renotch/Services/MediaRemoteCommandService.swift \
+    Sources/Renotch/Services/MediaRemoteNowPlayingService.swift \
     Sources/Renotch/Services/TransientSources/TransientEventSource.swift \
     Sources/Renotch/Services/TransientEventService.swift \
     Sources/Renotch/Window/FocusBlockerOverlayController.swift \
