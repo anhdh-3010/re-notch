@@ -21,8 +21,22 @@ final class MediaRemoteCommandService {
         runner: ProcessRunner? = nil
     ) {
         scriptURL = bundle.url(forResource: "mediaremote-adapter", withExtension: "pl")
-        frameworkURL = bundle.resourceURL?.appendingPathComponent("MediaRemoteAdapter.framework")
+        frameworkURL = Self.resolvedFrameworkURL(in: bundle)
         self.runner = runner ?? Self.defaultRunner
+    }
+
+    /// `bundle.resourceURL` is non-nil even when nothing was bundled (it's
+    /// just the Resources directory path), so appending the framework name
+    /// alone always yields a URL — it never proves the framework was
+    /// actually built and copied in. Confirm the inner binary exists on
+    /// disk before treating the framework as present.
+    private static func resolvedFrameworkURL(in bundle: Bundle) -> URL? {
+        guard let candidate = bundle.resourceURL?.appendingPathComponent("MediaRemoteAdapter.framework") else {
+            return nil
+        }
+        let binaryPath = candidate.appendingPathComponent("MediaRemoteAdapter").path
+        guard FileManager.default.fileExists(atPath: binaryPath) else { return nil }
+        return candidate
     }
 
     /// Test seam: construct with explicit resource URLs, bypassing bundle

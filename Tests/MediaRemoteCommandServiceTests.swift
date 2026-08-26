@@ -67,6 +67,45 @@ struct MediaRemoteCommandServiceTests {
         missingFramework.send(.nextTrack)
         expect(missingFrameworkCalls == 0, "send does not invoke runner when framework URL is nil")
 
+        // bundle-based init: a bundle whose resourceURL resolves fine (it
+        // always does) but whose MediaRemoteAdapter.framework was never
+        // actually built/copied in must report unavailable, not just
+        // "present" because the path string could be constructed.
+        let fm = FileManager.default
+        let scriptOnlyDir = URL(fileURLWithPath: NSTemporaryDirectory())
+            .appendingPathComponent("mrcs-test-script-only-\(UUID().uuidString)")
+        try? fm.createDirectory(at: scriptOnlyDir, withIntermediateDirectories: true)
+        defer { try? fm.removeItem(at: scriptOnlyDir) }
+        fm.createFile(atPath: scriptOnlyDir.appendingPathComponent("mediaremote-adapter.pl").path, contents: Data())
+        if let scriptOnlyBundle = Bundle(path: scriptOnlyDir.path) {
+            let scriptOnlyService = MediaRemoteCommandService(bundle: scriptOnlyBundle)
+            expect(
+                !scriptOnlyService.isAvailable,
+                "unavailable when framework directory was never built/copied into the bundle"
+            )
+        } else {
+            failures.append("could not construct test bundle for script-only fixture")
+        }
+
+        // Same bundle shape, but with the framework's inner binary present:
+        // must report available.
+        let fullBundleDir = URL(fileURLWithPath: NSTemporaryDirectory())
+            .appendingPathComponent("mrcs-test-full-\(UUID().uuidString)")
+        let frameworkDir = fullBundleDir.appendingPathComponent("MediaRemoteAdapter.framework")
+        try? fm.createDirectory(at: frameworkDir, withIntermediateDirectories: true)
+        defer { try? fm.removeItem(at: fullBundleDir) }
+        fm.createFile(atPath: fullBundleDir.appendingPathComponent("mediaremote-adapter.pl").path, contents: Data())
+        fm.createFile(atPath: frameworkDir.appendingPathComponent("MediaRemoteAdapter").path, contents: Data())
+        if let fullBundle = Bundle(path: fullBundleDir.path) {
+            let fullService = MediaRemoteCommandService(bundle: fullBundle)
+            expect(
+                fullService.isAvailable,
+                "available when both the script and the framework's inner binary exist on disk"
+            )
+        } else {
+            failures.append("could not construct test bundle for full fixture")
+        }
+
         if failures.isEmpty {
             print("MediaRemoteCommandServiceTests: all assertions passed")
         } else {

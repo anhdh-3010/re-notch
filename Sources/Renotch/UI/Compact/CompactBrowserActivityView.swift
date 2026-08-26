@@ -97,6 +97,7 @@ struct ExpandedBrowserMediaView: View {
                 .buttonStyle(.plain)
                 .padding(3)
                 .help("Open video")
+                .accessibilityLabel("Open video")
             }
         }
     }
