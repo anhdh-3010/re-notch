@@ -83,7 +83,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         [
             .charging: PowerEventSource(),
             .bluetooth: BluetoothEventSource(),
-            .screenshot: ScreenshotEventSource()
+            .screenshot: ScreenshotEventSource(),
+            .capsLock: CapsLockEventSource()
         ]
     }
 
