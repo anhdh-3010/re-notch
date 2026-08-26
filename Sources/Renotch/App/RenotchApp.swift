@@ -1,4 +1,5 @@
 import AppKit
+import Combine
 import SwiftUI
 
 @main
@@ -45,6 +46,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     let screenManager = ScreenManager()
     private var notchController: NotchWindowController?
     private var settingsController: SettingsWindowController?
+    private var transientEvents: TransientEventService?
+    private var settingsCancellable: AnyCancellable?
 
     override init() {
         super.init()
@@ -61,6 +64,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if model.settings.isEnabled {
             notchController?.show()
         }
+
+        let transientEvents = TransientEventService(
+            appModel: model,
+            sources: Self.makeTransientSources()
+        )
+        self.transientEvents = transientEvents
+        transientEvents.applySettings(model.settings)
+        settingsCancellable = model.$settings
+            .sink { [weak transientEvents] settings in
+                Task { @MainActor in transientEvents?.applySettings(settings) }
+            }
+    }
+
+    // Transient peek events (charger, AirPods, screenshots, Caps Lock).
+    // Sources are registered here as they are implemented (Tasks 5-8).
+    private static func makeTransientSources() -> [PeekSourceKind: TransientEventSource] {
+        [:]
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
