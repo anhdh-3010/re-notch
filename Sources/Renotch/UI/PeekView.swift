@@ -28,7 +28,8 @@ struct PeekView: View {
             trailingContent
                 .frame(width: NotchGeometry.peekWingWidth, alignment: .trailing)
         }
-        .padding(.horizontal, CGFloat(model.settings.resolvedCompactContentLeadingPadding))
+        .padding(.leading, CGFloat(model.settings.resolvedCompactContentLeadingPadding))
+        .padding(.trailing, CGFloat(model.settings.resolvedCompactContentTrailingPadding))
         .font(.system(size: 12, weight: .semibold))
     }
 
@@ -89,6 +90,7 @@ struct PeekView: View {
         case let .capsLock(on):
             Label(on ? "Caps Lock On" : "Caps Lock Off", systemImage: "capslock.fill")
                 .foregroundStyle(on ? Color.yellow : Color.secondary)
+                .lineLimit(1)
         }
     }
 
